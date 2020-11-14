@@ -1,0 +1,61 @@
+.main-container {
+  max-width: 1980px;
+  width: 100%;
+  margin: 0 auto;
+  background-color: #3c2475;
+  padding: 15px 90px;
+}
+.main-container h3 {
+  font-size: 20px;
+  margin: 10px 50px;
+  margin-bottom: 60px;
+}
+
+.inside-container {
+  max-width: 1200px;
+  background-color: #b497fc;
+  margin: 30px 0;
+  padding: 25px 40px;
+}
+.taboo_card{
+    position: relative;
+    display: inline-block;
+    text-align: left;
+    height: 500px;
+}
+.title{
+  font-size: 70px;
+  font-weight: bold;
+  color: #ff6666;
+  text-align: center;
+}
+.time{
+  width: 20px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 20px 0;
+  color: black;
+  background-color: #b497fc;
+}
+
+.time-container{
+  margin: 0 50px;
+  font-size: 20px;
+}
+.button-container button {
+   margin-left: 50px;
+   margin-right: 40px;
+   margin-bottom: 15px;
+   position: relative;
+   padding: 10px 10px;
+   font-family: 'Open Sans', sans-serif;
+   position: relative;
+   display: block;
+   background-color: #3c2475;
+   color: white;
+   border-radius: .25rem;
+}
+.button-container{
+  margin: 20px 0;
+}

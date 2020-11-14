@@ -1,0 +1,86 @@
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<html>
+  <head>
+    <title>Taboo</title>
+  </head>
+  <body>
+    <div class="main-container">
+      <h1 class="title">Taboo!</h1>
+      <div class="inside-container">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="cardimage">
+              <img class ="taboo_card"  id="carta" src="./ris/475.png"></img>
+            </div>
+          </div>
+          <div class="col-sm-8">
+            <div class="time-container">
+              Tempo :
+              <input id="seconds" type="text" class="time">
+            </div>
+            <h3>Premere k per ruotare, premere l per cambiare carta.</h3>
+            <div class="button-container">
+              <div>
+                <button onclick="ruota()">Ruota</button>
+              </div>
+              <div>
+                <button onclick="cambia()">Cambia</button>
+              </div>
+              <div>
+                <button onclick="start_timer()" >Cronometro</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+    <script src="timer.js"></script>
+    <script >
+      num_cards = 504;
+      rotated = false;
+      running_time = false;
+      avail_cards = [];
+      for(i=0; i<num_cards; i++){
+	  avail_cards.push(i+1);
+      }
+      console.log(avail_cards);
+
+      function start_timer(){
+	  if(!running_time){
+	      countdown();
+	  }
+      }
+
+      function ruota(){
+	  if(!rotated){
+	      document.getElementById("carta").style = "transform:rotate(180deg);";
+	  }
+	  else{
+	      document.getElementById("carta").style = "";
+	  }
+	  rotated = !rotated;
+      }
+
+      function cambia(){
+	  rand_index = Math.floor(Math.random() * avail_cards.length);
+	  path = "./ris/" + avail_cards[rand_index] + ".png";
+	  console.log(rand_index);
+	  document.getElementById("carta").src = path;
+	  console.log(avail_cards);
+	  avail_cards.splice(rand_index,1);
+	  console.log(path);
+	  console.log(avail_cards);
+      }
+
+      // detect enter keypress
+      addEventListener("keypress", function(e) {
+	  if(e.key == 'k') ruota();
+	  else if(e.key == 'l') cambia();
+      });
+    </script>
+  </body>
+</html>

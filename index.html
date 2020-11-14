@@ -1,0 +1,243 @@
+<html>
+  <head>
+    <style>
+      .main-container {
+	  max-width: 1980px;
+	  width: 100%;
+	  margin: 0 auto;
+	  background-color: #3c2475;
+	  padding: 15px 90px;
+      }
+      .main-container h3 {
+	  font-size: 20px;
+	  margin: 10px 50px;
+	  margin-bottom: 60px;
+      }
+
+      .inside-container {
+	  max-width: 1200px;
+	  background-color: #b497fc;
+	  margin: 30px 0;
+	  padding: 25px 40px;
+      }
+      .taboo_card{
+	  position: relative;
+	  display: inline-block;
+	  text-align: left;
+	  height: 500px;
+      }
+      .title{
+	  font-size: 70px;
+	  font-weight: bold;
+	  color: #ff6666;
+	  text-align: center;
+      }
+      .time{
+	  width: 20px;
+	  border: none;
+	  font-size: 16px;
+	  font-weight: bold;
+	  margin: 20px 0;
+	  color: black;
+	  background-color: #b497fc;
+      }
+
+      .time-container{
+	  margin: 0 50px;
+	  font-size: 20px;
+      }
+      .button-container button {
+	  margin-left: 50px;
+	  margin-right: 40px;
+	  margin-bottom: 15px;
+	  position: relative;
+	  padding: 10px 10px;
+	  font-family: 'Open Sans', sans-serif;
+	  position: relative;
+	  display: block;
+	  background-color: #3c2475;
+	  color: white;
+	  border-radius: .25rem;
+      }
+      .button-container{
+	  margin: 20px 0;
+	  text-align: right;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="input-form">
+      <input id="input" type="text" />
+      <button onclick="send()">Connect</button>
+      <pre id="output"></pre>
+    </div>
+
+    <div class="main-container" id="main-cont" hidden>
+      <h1 class="title">Taboo!</h1>
+      <div class="inside-container">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="cardimage">
+              <img class ="taboo_card"  id="carta"></img>
+            </div>
+          </div>
+          <div class="col-sm-8">
+            <div class="time-container">
+              Tempo :
+              <input id="seconds" type="text" class="time">
+            </div>
+            <h3>Premere l per cambiare carta.</h3>
+            <div class="button-container">
+              <div>
+                <button onclick="cambia()">Cambia</button>
+              </div>
+              <div>
+                <button onclick="start_timer()" >Cronometro</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <script>
+      var input = document.getElementById("input");
+      var playerID
+      var teamID
+      var socket
+      var currentPlayer
+      var runningTime
+    </script>
+    
+    <script>
+      function handleACK(msg){
+	  if(!msg.Accepted){
+	      window.alert(msg.Text)
+	  }
+	  else {
+	      window.alert(msg.Text)
+	      playerID = msg.PlayerID
+	      teamID = msg.TeamID
+	      currentPlayer = msg.CurrentPlayer
+	      console.log(document.getElementById("main-cont").hidden)
+	      document.getElementById("main-cont").hidden = 0
+	      document.getElementById("input-form").remove()
+	  }
+	      
+      }
+      
+      function handleMessage(msg) {
+	  console.log(msg)
+	  if(msg.T == "main.helloACK"){
+	      handleACK(msg.Obj)
+	  }
+	  else if(msg.T == "main.cardMsg"){
+	      var carta = document.getElementById("carta")	    
+	      carta.src = "data:image/jpeg;base64," + msg.Obj.Img
+	  }
+	  else if(msg.T == "main.timerStart"){
+	      if(!runningTime){
+		  var sendEndTurn = msg.Obj.PlayerID == playerID
+		  countdown(sendEndTurn);
+	      }
+	  }
+	  else if(msg.T == "main.newTurn") {
+	      currentPlayer = msg.Obj.CurrentPlayer
+	      if(currentPlayer == playerID){
+		  window.alert("E' il tuo turno")
+	      }
+	      console.log("New player: ", currentPlayer)
+	  }
+	  else{
+	      console.log("Unrecognized message")
+	  }
+      }
+    </script>
+
+    <script>
+      var secs = 5;
+      var count = secs;
+
+      document.getElementById("seconds").value = secs;
+
+      function countdown(set) {
+	  runningTime = true;
+	  Decrement(set);
+      }
+
+      function Decrement(set){
+	  console.log(count);
+	  if(count <= 1){
+	      runningTime = false;
+	      count = secs;
+	      document.getElementById("seconds").value = secs;
+	      console.log("aaa")
+	      alert("Tempo scaduto");
+	      console.log(set)
+	      if(set) {
+		  msg = {"T": "main.endTurn", "Obj": {"PlayerID": playerID}}
+		  socket.send(JSON.stringify(msg))
+	      }
+	  }
+	  else{
+	      count--;
+	      document.getElementById("seconds").value = count;
+	      setTimeout(function() {
+		  Decrement(set)
+	      },1000);
+	  }
+      }
+      
+    </script>
+    
+    
+    <script>
+      socket = new WebSocket("ws://localhost:8080/ws");
+      
+      socket.onopen = function () {
+          output.innerHTML += "Status: Connected\n";
+      };
+      
+      socket.onmessage = function (e) {
+	  var msg = JSON.parse(e.data)
+          handleMessage(msg)
+      };
+
+      socket.onclose = function (e) {
+	  window.alert("Connessione interrotta")
+	  console.log(e)
+      };
+
+      window.onbeforeunload =function() {
+	  socket.close()
+      }
+      
+      function send() {
+	  var msg = {"T" : "main.hello", "Obj": {"Name": input.value}}
+          socket.send(JSON.stringify(msg));
+          input.value = "";
+      }
+
+      function cambia(){
+	  if(currentPlayer != playerID) {
+	      window.alert("Non è il tuo turno maledetto idiota")
+	      return
+	  }
+	  var msg = {"T" : "main.changeCard", "Obj" : {"PlayerID": playerID}}
+	  socket.send(JSON.stringify(msg))
+      }
+
+      function start_timer() {
+	  if(playerID != currentPlayer) {
+	      window.alert("Non è il tuo turno cafone maledetto")
+	      return
+	  }
+	  var msg = {"T": "main.timerStart", "Obj" : {"PlayerID": playerID}}
+	  socket.send(JSON.stringify(msg))
+      }
+	  
+    </script>
+  </body>
+</html>
