@@ -81,6 +81,20 @@ type newTurn struct {
 	CurrentPlayer int
 }
 
+type playerEntry struct {
+	Name string
+	Team int
+	IsTurn bool
+}
+
+type playersList struct {
+	Players []playerEntry
+}
+
+func (this *playersList) addPlayer(pe playerEntry) {
+	this.Players = append(this.Players, pe)
+}
+
 		
 
 	

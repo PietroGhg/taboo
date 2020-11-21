@@ -49,6 +49,15 @@ func sendCard(path string, playerID int, msgType int){
 
 }
 
+func sendPlayers(playerID int, msgType int){
+	pList := m.getPlayerList()
+	msg, _ := genericJSON(pList)
+	conn := connections[playerID].conn
+	if err := conn.WriteMessage(msgType, msg); err != nil {
+		log.Println(err)
+	}
+}
+
 func isUp(name string) bool {
 	id, _ := m.getPlayerID(name)
 	return connections[id].isUp
@@ -141,6 +150,9 @@ func handleHello(msg hello, conn *websocket.Conn, msgType int){
 	//if it's the first connection, extract a card and send it
 	//else, send the current card
 	checkAndSendCard(player, msgType)
+	for id := range connections {
+		sendPlayers(id, msgType)
+	}
 	m.Unlock()
 }
 
@@ -192,6 +204,7 @@ func handleEndTurn(msg endTurn, msgType int) {
 	c := m.extractCard()
 	for playerID := range connections {
 		sendCard(c.getPath(), playerID, msgType)
+		sendPlayers(playerID, msgType)
 	}
 	m.Unlock()
 }

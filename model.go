@@ -135,6 +135,19 @@ func (this *ModelImpl) checkName(name string) bool {
 	return true
 }
 
+func (this *ModelImpl) getPlayerList() playersList {
+	var result playersList
+	for _, p := range this.Players {
+		entry := playerEntry{
+			Name : p.name,
+			Team : p.team.id,
+			IsTurn : p.id == this.currentPlayer,
+		}
+		result.addPlayer(entry)
+	}
+	return result	
+}
+
 func (this *ModelImpl) addPlayer(name string) (*Player, error) {
 	if !(this.checkName(name)){
 		return nil, errors.New("Name already taken")

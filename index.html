@@ -63,31 +63,42 @@
 	  margin: 20px 0;
 	  text-align: right;
       }
+      
+      .bottoni{
+	  test-align: right;
+      }
 
     </style>
   </head>
   <body>
     <div id="input-form">
+      Inserire nome<br>
       <input id="input" type="text" />
       <button onclick="send()">Connect</button>
       <pre id="output"></pre>
     </div>
 
+
     <div class="main-container" id="main-cont" hidden>
+      
       <h1 class="title">Taboo!</h1>
+      
       <div class="inside-container">
+	<div align="right">
+	  <p id="lista"></p>
+	</div>
         <div class="row">
           <div class="col-sm-4">
             <div class="cardimage">
               <img class ="taboo_card"  id="carta"></img>
             </div>
           </div>
-          <div class="col-sm-8">
+	  
+          <div class="bottoni">
             <div class="time-container">
               Tempo :
               <input id="seconds" type="text" class="time">
             </div>
-            <h3>Premere l per cambiare carta.</h3>
             <div class="button-container">
               <div>
                 <button onclick="cambia()">Cambia</button>
@@ -96,7 +107,7 @@
                 <button onclick="start_timer()" >Cronometro</button>
               </div>
             </div>
-          </div>
+          </div>	 	  
         </div>
       </div>
     </div>
@@ -127,6 +138,15 @@
 	  }
 	      
       }
+
+      function showPlayerList(msg) {
+	  lista = document.getElementById("lista")
+	  lista.innerHTML = ""
+	  msg.Players.forEach(function(item, index){
+	      lista.innerHTML += item.Name + " " +
+		  item.Team + " " +
+		  (item.IsTurn?"gioca":"") + "<br>"})
+      }
       
       function handleMessage(msg) {
 	  console.log(msg)
@@ -150,6 +170,9 @@
 	      }
 	      console.log("New player: ", currentPlayer)
 	  }
+	  else if(msg.T == "main.playersList") {
+	      showPlayerList(msg.Obj)
+	  }
 	  else{
 	      console.log("Unrecognized message")
 	  }
@@ -157,7 +180,7 @@
     </script>
 
     <script>
-      var secs = 5;
+      var secs = 60;
       var count = secs;
 
       document.getElementById("seconds").value = secs;
