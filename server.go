@@ -88,6 +88,7 @@ func handleHello(msg hello, conn *websocket.Conn, msgType int){
 			Text: "Username già in uso",
 		}
 		b, _ := genericJSON(ack)
+		m.Unlock();
 		if err := conn.WriteMessage(msgType, b); err != nil {
 			log.Println(err)
 		}
@@ -117,6 +118,7 @@ func handleHello(msg hello, conn *websocket.Conn, msgType int){
 			}
 			//send card
 			checkAndSendCard(m.Players[id], msgType)
+			m.Unlock()
 			return
 		}
 	}
@@ -151,7 +153,7 @@ func handleHello(msg hello, conn *websocket.Conn, msgType int){
 	//else, send the current card
 	checkAndSendCard(player, msgType)
 	for id := range connections {
-		sendPlayers(id, msgType)
+		go sendPlayers(id, msgType)
 	}
 	m.Unlock()
 }
@@ -165,7 +167,7 @@ func handleChangeCard(msg changeCard, conn *websocket.Conn, msgType int){
 	c := m.extractCard()
 	for playerID, conn := range connections{
 		if(conn.isUp) {
-			sendCard(c.getPath(), playerID, msgType)
+			go sendCard(c.getPath(), playerID, msgType)
 		}
 	}
 	m.Unlock()
@@ -195,16 +197,18 @@ func handleEndTurn(msg endTurn, msgType int) {
 	nt := newTurn{p}
 	toSend, _ := genericJSON(nt)
 	for _, c := range connections {
-		if err := c.conn.WriteMessage(msgType, toSend); err != nil {
-			log.Println(err)
-		}
+		go func(c *Connection){
+			if err := c.conn.WriteMessage(msgType, toSend); err != nil {
+				log.Println(err)
+			}}(c)
 	}
 
 	//extract a new card and send it
 	c := m.extractCard()
 	for playerID := range connections {
-		sendCard(c.getPath(), playerID, msgType)
-		sendPlayers(playerID, msgType)
+		go func(playerID int) {
+			sendCard(c.getPath(), playerID, msgType)
+			sendPlayers(playerID, msgType) }(playerID)
 	}
 	m.Unlock()
 }
