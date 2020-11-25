@@ -7,12 +7,22 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/websocket"
+	"sync"
 )
 
 type Connection struct {
+	sync.Mutex
 	playerName string
 	isUp bool
 	conn *websocket.Conn
+}
+
+func (this *Connection) send(msg []byte, msgType int){
+	this.Lock()
+	if err := this.conn.WriteMessage(msgType, msg); err != nil {
+		log.Println(err)
+	}
+	this.Unlock()
 }
 
 func (this *Connection) setConn(conn *websocket.Conn) {
@@ -38,24 +48,19 @@ func sendCard(path string, playerID int, msgType int){
 		path = m.getBlackPath()
 	}
 	
-	conn := connections[playerID].conn
 	img, _ := ioutil.ReadFile(path)
 	str := base64.StdEncoding.EncodeToString(img)
 	cardMessage := cardMsg{str}
 	i, _ := genericJSON(cardMessage)
-	if err := conn.WriteMessage(msgType, i); err != nil {
-		log.Println(err)
-	}
+	connections[playerID].send(i, msgType)
 
 }
 
 func sendPlayers(playerID int, msgType int){
 	pList := m.getPlayerList()
 	msg, _ := genericJSON(pList)
-	conn := connections[playerID].conn
-	if err := conn.WriteMessage(msgType, msg); err != nil {
-		log.Println(err)
-	}
+	connections[playerID].send(msg, msgType)
+
 }
 
 func isUp(name string) bool {
@@ -179,9 +184,7 @@ func handleStartTimer(msg timerStart, msgType int) {
 		if c.isUp {
 			msg := timerStart{msg.PlayerID}
 			js, _ := genericJSON(msg)
-			if err := c.conn.WriteMessage(msgType, js); err != nil {
-				log.Println(err)
-			}
+			c.send(js, msgType)
 		}
 	}
 	m.Unlock()
@@ -198,9 +201,8 @@ func handleEndTurn(msg endTurn, msgType int) {
 	toSend, _ := genericJSON(nt)
 	for _, c := range connections {
 		go func(c *Connection){
-			if err := c.conn.WriteMessage(msgType, toSend); err != nil {
-				log.Println(err)
-			}}(c)
+			c.send(toSend, msgType)
+		}(c)
 	}
 
 	//extract a new card and send it
