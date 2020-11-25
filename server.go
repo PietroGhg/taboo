@@ -278,6 +278,6 @@ func main(){
 	connections = make(map[int]*Connection)
 	m.init(2)
 	setupRoutes()
-	fmt.Println("Listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Listening on port 12345")
+	log.Fatal(http.ListenAndServe(":12345", nil))
 }
